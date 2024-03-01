@@ -43,7 +43,17 @@ app.get("/urls/:id", (req, res) => {
 
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' 
+  const longURLObject = req.body;
+  const id = generateRandomString()
+  console.log(`Short URL string connected to ${longURLObject.longURL}: ${id}`);
+  urlDatabase[id] = longURLObject.longURL;
+  const templateVars = { id: id, longURL: urlDatabase[id] };
+  res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.listen(PORT, () => {

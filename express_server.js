@@ -47,8 +47,7 @@ app.post("/urls", (req, res) => {
   const id = generateRandomString()
   console.log(`Short URL string connected to ${longURLObject.longURL}: ${id}`);
   urlDatabase[id] = longURLObject.longURL;
-  const templateVars = { id: id, longURL: urlDatabase[id] };
-  res.render("urls_show", templateVars);
+  res.redirect(/urls/${id});
 });
 
 app.get("/u/:id", (req, res) => {

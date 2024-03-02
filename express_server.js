@@ -45,7 +45,7 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   const longURLObject = req.body;
-  const id = generateRandomString()
+  const id = generateRandomString();
   console.log(`Short URL string connected to ${longURLObject.longURL}: ${id}`);
   urlDatabase[id] = longURLObject.longURL;
   res.redirect(`/urls/${id}`);
@@ -67,8 +67,14 @@ app.post('/urls/:id', (req, res) => {
 
 //Delete URL
 app.post("/urls/:id/delete", (req, res) => {
-  delete urlDatabase[req.params.id]
+  delete urlDatabase[req.params.id];
   res.redirect(`/urls`);
+});
+
+//Create a cookie
+app.post("/login", (req, res) => {
+  res.cookie('username', req.body.username);
+  res.redirect('/urls');
 });
 
 app.get("/u/:id", (req, res) => {

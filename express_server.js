@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-var cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
@@ -13,10 +13,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-function generateRandomString() {
+const generateRandomString = function() {
   const randomString = Math.random().toString(36).slice(2, 8);
   return randomString;
-}
+};
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -83,7 +83,7 @@ app.post("/login", (req, res) => {
 
 //logout and delete cookies
 app.post("/logout", (req, res) => {
-  res.clearCookie('username', req.body.username)
+  res.clearCookie('username', req.body.username);
   res.redirect('/urls');
 });
 

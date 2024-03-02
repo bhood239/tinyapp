@@ -41,6 +41,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+//Add URL
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
   const longURLObject = req.body;
@@ -50,8 +51,23 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+//Update URL
+app.post('/urls/:id', (req, res) => {
+  const { id } = req.params;
+  const { longURL } = req.body;
+  
+  if (urlDatabase[id]) {
+    urlDatabase[id] = longURL;
+    console.log(`Updated url connected to ${id} to ${longURL}`);
+    res.redirect('/urls');
+  } else {
+    res.sendStatus(404);
+  }
+});
+
+//Delete URL
 app.post("/urls/:id/delete", (req, res) => {
-  delete req.params.id;
+  delete urlDatabase[req.params.id]
   res.redirect(`/urls`);
 });
 

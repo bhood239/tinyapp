@@ -83,7 +83,6 @@ app.post("/login", (req, res) => {
 
 //logout and delete cookies
 app.post("/logout", (req, res) => {
-  res.cookie('username', req.body.username);
   res.clearCookie('username', req.body.username)
   res.redirect('/urls');
 });

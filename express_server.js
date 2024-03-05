@@ -89,10 +89,10 @@ app.post("/register", (req, res) => {
   const userPassword = req.body.password;
 
   if (!userEmail || !userPassword) {
-    return res.status(400).send({ message: 'Error 400: No email entered!' });
+    return res.status(400).send('Error 400: No email/password entered!' );
   }
   if (findUser(userEmail)) {
-    return res.status(400).send({ message: 'Error 400: Email already exists!' });
+    return res.status(400).send('Error 400: Email already exists!' );
   }
   const newId = generateRandomString();
   const newUser = {

@@ -15,11 +15,21 @@ const urlDatabase = {
 
 const users = {};
 
-
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).slice(2, 8);
   return randomString;
 };
+
+const findUser = function(userEmail) {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === userEmail) {
+      return user;
+    }
+  }
+  return null; // Return null if user is not found
+};
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -74,20 +84,30 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  // Retrieve user inputs
+  const userEmail = req.body.email;
+  const userPassword = req.body.password;
+
+  if (!userEmail) {
+    return res.status(400).send({ message: 'Error 400: No email entered!' });
+  }
+  if (findUser(userEmail)) {
+    return res.status(400).send({ message: 'Error 400: Email already exists!' });
+  }
   const newId = generateRandomString();
   const newUser = {
     id: newId,
-    email: req.body.email,
-    password: req.body.password
-  }
+    email: userEmail,
+    password: userPassword
+  };
+
   users[newId] = newUser;
 
   res.cookie('user_id', newId);
 
   console.log(`Added new User: ${JSON.stringify(newUser)}`);
-
   res.redirect("/urls");
-})
+});
 
 //Update URL
 app.post('/urls/:id', (req, res) => {
@@ -119,8 +139,8 @@ app.post("/login", (req, res) => {
 
 //logout and delete cookies
 app.post("/logout", (req, res) => {
-  res.clearCookie('user', req.body.user_id);
-
+  res.clearCookie('user_id', req.cookies.user_id);
+  console.log("deleted cookies");
   res.redirect('/urls');
 });
 

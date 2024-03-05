@@ -88,7 +88,7 @@ app.post("/register", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  if (!userEmail) {
+  if (!userEmail || !userPassword) {
     return res.status(400).send({ message: 'Error 400: No email entered!' });
   }
   if (findUser(userEmail)) {

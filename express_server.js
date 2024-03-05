@@ -13,6 +13,9 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {};
+
+
 const generateRandomString = function() {
   const randomString = Math.random().toString(36).slice(2, 8);
   return randomString;
@@ -27,7 +30,10 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.username };
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+  const templateVars = { urls: urlDatabase, user: user };
+
   res.render("urls_index", templateVars);
 });
 
@@ -36,24 +42,52 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies.username };
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+
+  const templateVars = { user: user };
+
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies.username };
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: user };
+
   res.render("urls_show", templateVars);
 });
 
 //Add URL
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
+
   const longURLObject = req.body;
   const id = generateRandomString();
+
   console.log(`Short URL string connected to ${longURLObject.longURL}: ${id}`);
+
   urlDatabase[id] = longURLObject.longURL;
+
   res.redirect(`/urls/${id}`);
 });
+
+app.post("/register", (req, res) => {
+  const newId = generateRandomString();
+  const newUser = {
+    id: newId,
+    email: req.body.email,
+    password: req.body.password
+  }
+  users[newId] = newUser;
+
+  res.cookie('user_id', newId);
+
+  console.log(`Added new User: ${JSON.stringify(newUser)}`);
+
+  res.redirect("/urls");
+})
 
 //Update URL
 app.post('/urls/:id', (req, res) => {
@@ -72,23 +106,27 @@ app.post('/urls/:id', (req, res) => {
 //Delete URL
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
+
   res.redirect(`/urls`);
 });
 
 //Create a cookie
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
+
   res.redirect('/urls');
 });
 
 //logout and delete cookies
 app.post("/logout", (req, res) => {
-  res.clearCookie('username', req.body.username);
+  res.clearCookie('user', req.body.user_id);
+
   res.redirect('/urls');
 });
 
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
+
   res.redirect(longURL);
 });
 
@@ -97,7 +135,12 @@ app.listen(PORT, () => {
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { username: req.cookies.username};
+  const userId = req.cookies.user_id;
+  const user = users[userId];
+
+  const templateVars = { user: user };
+
   res.render("register", templateVars);
 });
+
 

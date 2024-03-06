@@ -8,10 +8,7 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+const urlDatabase = {};
 
 const users = {};
 
@@ -32,45 +29,67 @@ const findUser = function(userEmail) {
 
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/login");
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 app.get("/urls", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   const userId = req.cookies.user_id;
   const user = users[userId];
-  const templateVars = { urls: urlDatabase, user: user };
+  const templateVars = { urls: urlDatabase, user };
 
   res.render("urls_index", templateVars);
 });
 
+
 app.get("/urls.json", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   res.json(urlDatabase);
 });
 
+
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   const userId = req.cookies.user_id;
   const user = users[userId];
 
-  const templateVars = { user: user };
+  const templateVars = { user };
 
   res.render("urls_new", templateVars);
 });
 
+
 app.get("/urls/:id", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   const userId = req.cookies.user_id;
   const user = users[userId];
 
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: user };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user };
 
   res.render("urls_show", templateVars);
 });
 
+
+
 //Add URL
 app.post("/urls", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   console.log(req.body); // Log the POST request body to the console
 
   const longURLObject = req.body;
@@ -83,17 +102,22 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+
+
 app.post("/register", (req, res) => {
-  // Retrieve user inputs
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  if (!userEmail || !userPassword) {
-    return res.status(400).send('Error 400: No email/password entered!' );
+  if (!userEmail) {
+    return res.status(400).send('Error 400: No email entered!' );
+  }
+  if (!userPassword) {
+    return res.status(400).send('Error 400: No password entered!' );
   }
   if (findUser(userEmail)) {
     return res.status(400).send('Error 400: Email already exists!' );
   }
+
   const newId = generateRandomString();
   const newUser = {
     id: newId,
@@ -109,8 +133,14 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+
+
 //Update URL
 app.post('/urls/:id', (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   const { id } = req.params;
   const { longURL } = req.body;
   
@@ -123,42 +153,68 @@ app.post('/urls/:id', (req, res) => {
   }
 });
 
+
 //Delete URL
 app.post("/urls/:id/delete", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   delete urlDatabase[req.params.id];
 
   res.redirect(`/urls`);
 });
 
-//Create a cookie
-app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
 
-  res.redirect('/urls');
+app.post("/login", (req, res) => {
+  const userEmail = req.body.email;
+  const userPassword = req.body.password;
+
+  if(!findUser(userEmail)) {
+    return res.status(403).send('Error 403: User not found!' );
+  }
+
+  if (findUser(userEmail).email === userEmail && findUser(userEmail).password === userPassword) {
+    res.cookie('user_id', findUser(userEmail).id);
+    return res.redirect('/urls');
+  } else {
+    return res.status(403).send('Error 403: Invalid login!' );
+  }
 });
+
 
 //logout and delete cookies
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id', req.cookies.user_id);
   console.log("deleted cookies");
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
+
+
 app.get("/u/:id", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(403).send('Error 403: Login required!');
+  }
+
   const longURL = urlDatabase[req.params.id];
 
   res.redirect(longURL);
 });
 
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
 
 app.get("/register", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
 
-  const templateVars = { user: user };
+  const templateVars = { user };
 
   res.render("register", templateVars);
 });
@@ -167,7 +223,7 @@ app.get("/login", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
 
-  const templateVars = { user: user };
+  const templateVars = { user };
 
   res.render("login", templateVars);
 });

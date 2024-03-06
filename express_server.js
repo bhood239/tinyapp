@@ -57,7 +57,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (!req.cookies.user_id) {
-    return res.status(403).send('Error 403: Login required!');
+    return res.redirect("/login");
   }
 
   const userId = req.cookies.user_id;
@@ -71,7 +71,7 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   if (!req.cookies.user_id) {
-    return res.status(403).send('Error 403: Login required!');
+    return res.status(403).send('Error 403: Login required to view URLs!');
   }
 
   const userId = req.cookies.user_id;
@@ -87,7 +87,7 @@ app.get("/urls/:id", (req, res) => {
 //Add URL
 app.post("/urls", (req, res) => {
   if (!req.cookies.user_id) {
-    return res.status(403).send('Error 403: Login required!');
+    return res.status(403).send('Error 403: Please login to add URLs!');
   }
 
   console.log(req.body); // Log the POST request body to the console
@@ -167,15 +167,21 @@ app.post("/urls/:id/delete", (req, res) => {
 
 
 app.post("/login", (req, res) => {
+
+  if (!req.cookies.user_id) {
+    return res.redirect("/urls");
+  }
+
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  if(!findUser(userEmail)) {
+  const user = findUser(userEmail);
+  if(!user) {
     return res.status(403).send('Error 403: User not found!' );
   }
 
-  if (findUser(userEmail).email === userEmail && findUser(userEmail).password === userPassword) {
-    res.cookie('user_id', findUser(userEmail).id);
+  if (user.email === userEmail && user.password === userPassword) {
+    res.cookie('user_id', user.id);
     return res.redirect('/urls');
   } else {
     return res.status(403).send('Error 403: Invalid login!' );
@@ -193,10 +199,7 @@ app.post("/logout", (req, res) => {
 
 
 app.get("/u/:id", (req, res) => {
-  if (!req.cookies.user_id) {
-    return res.status(403).send('Error 403: Login required!');
-  }
-
+ 
   const longURL = urlDatabase[req.params.id];
 
   res.redirect(longURL);
@@ -214,6 +217,10 @@ app.get("/register", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
 
+  if (userId) {
+    return res.redirect("/urls");
+  }
+
   const templateVars = { user };
 
   res.render("register", templateVars);
@@ -222,6 +229,10 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const userId = req.cookies.user_id;
   const user = users[userId];
+
+  if (userId) {
+    return res.redirect("/urls");
+  }
 
   const templateVars = { user };
 

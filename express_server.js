@@ -8,7 +8,16 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const urlDatabase = {};
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
+};
 
 const users = {};
 
@@ -27,6 +36,16 @@ const findUser = function(userEmail) {
   return null; // Return null if user is not found
 };
 
+const urlsForUser = function(id) {
+  const userUrls = [];
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      userUrls.push({ id: key, ...urlDatabase[key] });
+    }
+  }
+  return userUrls;
+};
+
 
 app.get("/", (req, res) => {
   res.redirect("/login");
@@ -40,7 +59,9 @@ app.get("/urls", (req, res) => {
 
   const userId = req.cookies.user_id;
   const user = users[userId];
-  const templateVars = { urls: urlDatabase, user };
+  const userUrls = urlsForUser(userId)
+  console.log(userUrls)
+  const templateVars = { urls: userUrls, user };
 
   res.render("urls_index", templateVars);
 });
@@ -73,11 +94,16 @@ app.get("/urls/:id", (req, res) => {
   if (!req.cookies.user_id) {
     return res.status(403).send('Error 403: Login required to view URLs!');
   }
-
   const userId = req.cookies.user_id;
   const user = users[userId];
 
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user };
+  const userUrls = urlsForUser(userId);
+
+  if (!urlDatabase[req.params.id] || urlDatabase[req.params.id].userID !== userId) {
+    return res.status(403).send('Error 403: URL belongs to another user!');
+  }
+
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user };
 
   res.render("urls_show", templateVars);
 });
@@ -94,10 +120,11 @@ app.post("/urls", (req, res) => {
 
   const longURLObject = req.body;
   const id = generateRandomString();
+  const userID = req.cookies.user_id;
 
   console.log(`Short URL string connected to ${longURLObject.longURL}: ${id}`);
 
-  urlDatabase[id] = longURLObject.longURL;
+  urlDatabase[id] = { longURL: longURLObject.longURL, userID };
 
   res.redirect(`/urls/${id}`);
 });
@@ -144,8 +171,8 @@ app.post('/urls/:id', (req, res) => {
   const { id } = req.params;
   const { longURL } = req.body;
   
-  if (urlDatabase[id]) {
-    urlDatabase[id] = longURL;
+  if (urlDatabase[id].userID === req.cookies.user_id) {
+    urlDatabase[id].longURL = longURL;
     console.log(`Updated url connected to ${id} to ${longURL}`);
     res.redirect('/urls');
   } else {
@@ -156,21 +183,21 @@ app.post('/urls/:id', (req, res) => {
 
 //Delete URL
 app.post("/urls/:id/delete", (req, res) => {
+  const { id } = req.params;
+
   if (!req.cookies.user_id) {
     return res.status(403).send('Error 403: Login required!');
   }
-
-  delete urlDatabase[req.params.id];
-
-  res.redirect(`/urls`);
+  if (urlDatabase[id].userID === req.cookies.user_id) {
+    delete urlDatabase[req.params.id];
+    res.redirect(`/urls`);
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 
 app.post("/login", (req, res) => {
-
-  if (!req.cookies.user_id) {
-    return res.redirect("/urls");
-  }
 
   const userEmail = req.body.email;
   const userPassword = req.body.password;
@@ -200,7 +227,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
  
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
 
   res.redirect(longURL);
 });

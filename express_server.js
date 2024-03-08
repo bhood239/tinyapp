@@ -37,10 +37,10 @@ const findUser = function(userEmail) {
 };
 
 const urlsForUser = function(id) {
-  const userUrls = [];
+  const userUrls = {};
   for (const key in urlDatabase) {
     if (urlDatabase[key].userID === id) {
-      userUrls.push({ id: key, ...urlDatabase[key] });
+      userUrls[key] = urlDatabase[key];
     }
   }
   return userUrls;
@@ -91,13 +91,9 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:id", (req, res) => {
-  if (!req.cookies.user_id) {
-    return res.status(403).send('Error 403: Login required to view URLs!');
-  }
+  
   const userId = req.cookies.user_id;
   const user = users[userId];
-
-  const userUrls = urlsForUser(userId);
 
   if (!urlDatabase[req.params.id] || urlDatabase[req.params.id].userID !== userId) {
     return res.status(403).send('Error 403: URL belongs to another user!');
@@ -135,11 +131,8 @@ app.post("/register", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  if (!userEmail) {
-    return res.status(400).send('Error 400: No email entered!' );
-  }
-  if (!userPassword) {
-    return res.status(400).send('Error 400: No password entered!' );
+  if (!userEmail || !userPassword) {
+    return res.status(400).send('Error 400: No email/password entered!' );
   }
   if (findUser(userEmail)) {
     return res.status(400).send('Error 400: Email already exists!' );
@@ -176,7 +169,7 @@ app.post('/urls/:id', (req, res) => {
     console.log(`Updated url connected to ${id} to ${longURL}`);
     res.redirect('/urls');
   } else {
-    res.sendStatus(404);
+    res.sendStatus(403);
   }
 });
 
@@ -192,7 +185,7 @@ app.post("/urls/:id/delete", (req, res) => {
     delete urlDatabase[req.params.id];
     res.redirect(`/urls`);
   } else {
-    res.sendStatus(404);
+    res.sendStatus(403);
   }
 });
 

@@ -131,6 +131,7 @@ app.post("/urls", (req, res) => {
 app.post("/register", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
+  const hashedPassword = bcrypt.hashSync(userPassword, 10);
 
   if (!userEmail || !userPassword) {
     return res.status(400).send('Error 400: No email/password entered!' );
@@ -143,7 +144,7 @@ app.post("/register", (req, res) => {
   const newUser = {
     id: newId,
     email: userEmail,
-    password: bcrypt.hashSync(userPassword, 10)
+    password: hashedPassword
   };
 
   users[newId] = newUser;
@@ -222,6 +223,9 @@ app.get("/u/:id", (req, res) => {
  
   const longURL = urlDatabase[req.params.id].longURL;
 
+  if (!longURL) {
+    return res.status(400)
+  }
   res.redirect(longURL);
 });
 

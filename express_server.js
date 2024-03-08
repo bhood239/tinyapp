@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const bcrypt = require("bcryptjs");
+const { findUser } = require("./helpers");
 
 const cookieParser = require('cookie-parser');
 const cookieSession = require('cookie-session')
@@ -35,15 +36,15 @@ const generateRandomString = function() {
   return randomString;
 };
 
-const findUser = function(userEmail) {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === userEmail) {
-      return user;
-    }
-  }
-  return null; // Return null if user is not found
-};
+// const findUser = function(userEmail, database) {
+//   for (const userId in database) {
+//     const user = database[userId];
+//     if (user.email === userEmail) {
+//       return user;
+//     }
+//   }
+//   return null; // Return null if user is not found
+// };
 
 const urlsForUser = function(id) {
   const userUrls = {};
@@ -145,7 +146,7 @@ app.post("/register", (req, res) => {
   if (!userEmail || !userPassword) {
     return res.status(400).send('Error 400: No email/password entered!' );
   }
-  if (findUser(userEmail)) {
+  if (findUser(userEmail, users)) {
     return res.status(400).send('Error 400: Email already exists!' );
   }
 
@@ -206,7 +207,7 @@ app.post("/login", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  const user = findUser(userEmail);
+  const user = findUser(userEmail, users);
   if(!user) {
     return res.status(403).send('Error 403: User not found!' );
   }

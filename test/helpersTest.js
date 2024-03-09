@@ -15,7 +15,7 @@ const testUsers = {
   }
 };
 
-describe('getUserByEmail', function() {
+describe('findUser', function() {
   it('should return a user with valid email', function() {
     const user = findUser("user@example.com", testUsers)
     const expectedUserID = "userRandomID";
@@ -24,7 +24,6 @@ describe('getUserByEmail', function() {
   });
   it('should return null if email is not in database', function() {
     const user = findUser("user3@example.com", testUsers)
-    const expectedUserID = "user3RandomID";
     assert.strictEqual(user, null);
   });
 });

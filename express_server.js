@@ -9,6 +9,7 @@ const cookieSession = require('cookie-session')
 
 app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
@@ -36,15 +37,6 @@ const generateRandomString = function() {
   return randomString;
 };
 
-// const findUser = function(userEmail, database) {
-//   for (const userId in database) {
-//     const user = database[userId];
-//     if (user.email === userEmail) {
-//       return user;
-//     }
-//   }
-//   return null; // Return null if user is not found
-// };
 
 const urlsForUser = function(id) {
   const userUrls = {};
@@ -58,7 +50,11 @@ const urlsForUser = function(id) {
 
 
 app.get("/", (req, res) => {
-  res.redirect("/login");
+  if (!req.session.user_id) {
+    return res.status(302).redirect("/login");
+  } else {
+    res.redirect("/urls");
+  }
 });
 
 
@@ -89,7 +85,7 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_id) {
-    return res.redirect("/login");
+    return res.status(302).redirect("/login");
   }
 
   const userId = req.session.user_id;
@@ -102,19 +98,21 @@ app.get("/urls/new", (req, res) => {
 
 
 app.get("/urls/:id", (req, res) => {
-  
   const userId = req.session.user_id;
   const user = users[userId];
 
-  if (!urlDatabase[req.params.id] || urlDatabase[req.params.id].userID !== userId) {
-    return res.status(403).send('Error 403: URL belongs to another user!');
+  if (!urlDatabase[req.params.id]) {
+    return res.status(404).send('Error 404: URL does not exist!');
+  }
+
+  if (urlDatabase[req.params.id].userID !== userId) {
+    return res.status(403).send('Error 403: Unauthorized access!');
   }
 
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user };
 
   res.render("urls_show", templateVars);
 });
-
 
 
 //Add URL

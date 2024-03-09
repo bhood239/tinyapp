@@ -26,22 +26,22 @@ describe("Login and Access Control Test", () => {
     const agent = chai.request.agent("http://localhost:8080");
 
     return agent
-    .get('/')
-    .end((err, res) => {
-      expect(res).to.redirectTo('http://localhost:8080/login');
-      expect(res).to.have.status(302);
-      done();
-    });
+      .get('/')
+      .end((err, res) => {
+        expect(res).to.redirectTo('http://localhost:8080/login');
+        expect(res).to.have.status(302);
+        done();
+      });
   });
   // Test case: GET request to "/urls/new"
   it('should redirect to /login with status code 302', function() {
     return agent
-    .get('/urls/new')
-    .end((err, res) => {
-      expect(res).to.redirectTo('http://localhost:8080/login');
-      expect(res).to.have.status(302);
-      done();
-    });
+      .get('/urls/new')
+      .end((err, res) => {
+        expect(res).to.redirectTo('http://localhost:8080/login');
+        expect(res).to.have.status(302);
+        done();
+      });
   });
 
   // Test case: GET request to "/urls/NOTEXISTS"
@@ -56,11 +56,11 @@ describe("Login and Access Control Test", () => {
   // Test case: GET request to "/urls/b2xVn2"
   it('should return status code 403 for existing URL', function() {
     return agent
-    .get('/urls/b2xVn2')
-    .end((err, res) => {
-      expect(res).to.have.status(403);
-      done();
-    });
+      .get('/urls/b2xVn2')
+      .end((err, res) => {
+        expect(res).to.have.status(403);
+        done();
+      });
   });
 
   // Close the agent after all tests are done
